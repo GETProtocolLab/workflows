@@ -17,6 +17,9 @@ on:
 jobs:
   build:
     runs-on: [self-hosted, ubuntu20.04-self]
+    strategy:
+      matrix:
+        platform: ["linux/arm64", "linux/amd64"]
     steps:
       # Setup
       - uses: actions/checkout@v3
@@ -29,11 +32,12 @@ jobs:
 
       # Build Docker images
       - name: Build image using docker-build action
-        uses: GETProtocolLab/docker-build-action@v1.0.4
+        uses: GETProtocolLab/docker-build-action@feature/arm
         with:
           password: ${{ secrets.GITHUB_TOKEN }}
           image: ${{ inputs.image }}
           tag: ${{ steps.serialize_branch.outputs.branch }}
+          platforms: ${{ matrix.platform }}
           build_args: |
             REPO_AUTH=${{ secrets.GH_ACCESS_TOKEN }}
           extra_tags: |
