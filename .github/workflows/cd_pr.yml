@@ -35,18 +35,18 @@ jobs:
 
       - run: kubectl kustomize ${{ matrix.overlay }} > .kuberc-input
 
-      # Install Deno without MarkArts/kuberc's actions/cache@v2 step (deprecated by GitHub).
+      # Deno + kuberc: do not use MarkArts/kuberc composite — it still declares actions/cache@v2 in
+      # its action.yml and GitHub fails the workflow at parse time even when that step is skipped.
       - if: steps.overlay_exists.outcome == 'success'
         uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
 
       - if: steps.overlay_exists.outcome == 'success'
-        uses: MarkArts/kuberc/.github/actions/kuberc@main
-        with:
-          file: .kuberc-input
-          deno_install: "false"
-          extra_args: |
+        shell: bash
+        run: |
+          deno run -q --allow-read=.kuberc-input "https://deno.land/x/kuberc@v5/main.ts" \
+            --file .kuberc-input \
             --skip-secrets rabbitmq-connection,newrelic-licence,rds-secret \
             --skip-configmaps s3-configmap,stripeout-elasticache,shitcoins-elasticache,gus-elasticache,entrails-elasticache,stripe-adapter-elasticache,dummy-psp-elasticache,rumen-elasticache,openhaggler-elasticache \
             --skip-services ingress-nginx-controller
