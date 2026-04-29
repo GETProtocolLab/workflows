@@ -53,7 +53,15 @@ jobs:
 
   argocd_diff:
     runs-on: [self-hosted, ubuntu20.04-self]
-    if: github.base_ref  == 'development' || github.base_ref  == 'master' || github.base_ref  == 'production'
+    # NOTE: 'development' base is intentionally excluded.
+    # The testing ArgoCD instance at https://argocd.euc1.t.get-protocol.dev
+    # is currently unreachable (HTTP 503) — there is no live server for the
+    # diff to query, so the job would fail on every PR targeting development.
+    # Production ArgoCD (https://argocd.euc1.get-protocol.cloud) is healthy
+    # and the diff still gates PRs targeting master and production.
+    # When the testing cluster is restored, add `github.base_ref == 'development' ||`
+    # back to the condition below.
+    if: github.base_ref == 'master' || github.base_ref == 'production'
     steps:
       - id: argocd
         shell: bash
